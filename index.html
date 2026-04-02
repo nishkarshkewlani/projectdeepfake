@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #e8bcf0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            width: 700px;
+            max-width: 90%;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #6a0dad;
+            color: white;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+
+        .card {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 12px;
+        }
+
+        .real {
+            color: green;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .fake {
+            color: red;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        #statusText {
+            margin-top: 10px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Deepfake Detection System</h1>
+    <p>Upload an image to check whether it is REAL or FAKE</p>
+
+    <input type="file" id="fileInput" accept="image/*">
+    <br>
+    <button class="btn" onclick="uploadFile()">Predict</button>
+
+    <div class="card">
+        <p id="predictionText">Waiting...</p>
+        <p id="confidenceText">Confidence: --</p>
+        <p id="statusText">Ready</p>
+    </div>
+</div>
+
+<script>
+async function uploadFile() {
+    const fileInput = document.getElementById("fileInput");
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please upload image first");
+        return;
+    }
+
+    document.getElementById("statusText").innerText = "Predicting...";
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const response = await fetch("/predict", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+        console.log(data);
+
+        if (data.error) {
+            document.getElementById("statusText").innerText = data.error;
+            return;
+        }
+
+        const predText = document.getElementById("predictionText");
+        predText.innerText = data.prediction;
+        predText.className = data.prediction === "REAL" ? "real" : "fake";
+
+        document.getElementById("confidenceText").innerText =
+            "Confidence: " + data.confidence + "%";
+
+        document.getElementById("statusText").innerText = "Done";
+    } catch (error) {
+        console.error(error);
+        document.getElementById("statusText").innerText = "Prediction failed";
+    }
+}
+</script>
+
+</body>
+</html>
